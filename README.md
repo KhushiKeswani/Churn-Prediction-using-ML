@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Customer Churn Prediction — Streamlit
 
 A simple Streamlit interface for the Customer Churn Prediction ML project.
@@ -25,3 +26,6 @@ streamlit run app.py
 ## Deploy
 
 Push `app.py`, `requirements.txt`, and `.streamlit/config.toml` to GitHub, then deploy the repository from Streamlit Community Cloud.
+=======
+
+>>>>>>> 34fc16dd9d46958c40af06ab3356274f795a31c0
