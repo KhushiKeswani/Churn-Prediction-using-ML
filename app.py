@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -32,54 +31,63 @@ FEATURE_COLUMNS = [
     "MonthlyCharges", "TotalCharges"
 ]
 
-
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_URL)
-
-    # Same preprocessing used in the notebook.
     df = df.drop(columns=["customerID"])
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"], errors="coerce"
+    )
     df = df.dropna(subset=["TotalCharges"]).copy()
-
     return df
-
 
 @st.cache_resource
 def train_model():
     df = load_data()
 
-    # Encode categorical columns exactly as in the notebook.
     encoders = {}
+
     for column in CATEGORICAL_COLUMNS:
         encoder = LabelEncoder()
         df[column] = encoder.fit_transform(df[column])
         encoders[column] = encoder
 
-    # Target encoding.
     churn_encoder = LabelEncoder()
     df["Churn"] = churn_encoder.fit_transform(df["Churn"])
 
     X = df[FEATURE_COLUMNS]
     y = df["Churn"]
 
-    # Same split and SMOTE configuration as the notebook.
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X,
+        y,
+        test_size=0.2,
+        random_state=42
     )
 
     smote = SMOTE(random_state=42)
-    X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
 
-    # Same model used in the notebook.
-    model = RandomForestClassifier(random_state=42)
+    X_train_smote, y_train_smote = smote.fit_resample(
+        X_train,
+        y_train
+    )
+
+    model = RandomForestClassifier(
+        n_estimators=400,
+        max_depth=8,
+        min_samples_leaf=1,
+        random_state=42
+    )
+
     model.fit(X_train_smote, y_train_smote)
 
     return model, encoders, churn_encoder
 
-
 st.title("Customer Churn Prediction")
-st.caption("Random Forest + SMOTE | Telco Customer Churn")
+
+st.caption(
+    "Optimized Random Forest + SMOTE | Telco Customer Churn"
+)
 
 with st.spinner("Loading the trained model..."):
     model, encoders, churn_encoder = train_model()
@@ -100,61 +108,108 @@ with st.form("churn_form"):
 
     with col1:
         gender = st.selectbox("Gender", ["Female", "Male"])
-        senior_citizen = st.selectbox("Senior Citizen", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
+
+        senior_citizen = st.selectbox(
+            "Senior Citizen",
+            [0, 1],
+            format_func=lambda x: "No" if x == 0 else "Yes"
+        )
+
         partner = st.selectbox("Partner", ["Yes", "No"])
         dependents = st.selectbox("Dependents", ["Yes", "No"])
-        tenure = st.number_input("Tenure (months)", min_value=0, max_value=72, value=12)
+
+        tenure = st.number_input(
+            "Tenure (months)",
+            min_value=0,
+            max_value=72,
+            value=12
+        )
 
     with col2:
-        phone_service = st.selectbox("Phone Service", ["Yes", "No"])
+        phone_service = st.selectbox(
+            "Phone Service",
+            ["Yes", "No"]
+        )
+
         multiple_lines = st.selectbox(
-            "Multiple Lines", ["No", "Yes", "No phone service"]
+            "Multiple Lines",
+            ["No", "Yes", "No phone service"]
         )
+
         internet_service = st.selectbox(
-            "Internet Service", ["DSL", "Fiber optic", "No"]
+            "Internet Service",
+            ["DSL", "Fiber optic", "No"]
         )
+
         online_security = st.selectbox(
-            "Online Security", ["Yes", "No", "No internet service"]
+            "Online Security",
+            ["Yes", "No", "No internet service"]
         )
+
         online_backup = st.selectbox(
-            "Online Backup", ["Yes", "No", "No internet service"]
+            "Online Backup",
+            ["Yes", "No", "No internet service"]
         )
+
         device_protection = st.selectbox(
-            "Device Protection", ["Yes", "No", "No internet service"]
+            "Device Protection",
+            ["Yes", "No", "No internet service"]
         )
+
         tech_support = st.selectbox(
-            "Tech Support", ["Yes", "No", "No internet service"]
+            "Tech Support",
+            ["Yes", "No", "No internet service"]
         )
 
     with col3:
         streaming_tv = st.selectbox(
-            "Streaming TV", ["Yes", "No", "No internet service"]
+            "Streaming TV",
+            ["Yes", "No", "No internet service"]
         )
+
         streaming_movies = st.selectbox(
-            "Streaming Movies", ["Yes", "No", "No internet service"]
+            "Streaming Movies",
+            ["Yes", "No", "No internet service"]
         )
+
         contract = st.selectbox(
-            "Contract", ["Month-to-month", "One year", "Two year"]
+            "Contract",
+            ["Month-to-month", "One year", "Two year"]
         )
-        paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+
+        paperless_billing = st.selectbox(
+            "Paperless Billing",
+            ["Yes", "No"]
+        )
+
         payment_method = st.selectbox(
             "Payment Method",
             [
                 "Electronic check",
                 "Mailed check",
                 "Bank transfer (automatic)",
-                "Credit card (automatic)",
-            ],
+                "Credit card (automatic)"
+            ]
         )
+
         monthly_charges = st.number_input(
-            "Monthly Charges ($)", min_value=0.0, value=70.0, step=0.01
+            "Monthly Charges ($)",
+            min_value=0.0,
+            value=70.0,
+            step=0.01
         )
+
         total_charges = st.number_input(
-            "Total Charges ($)", min_value=0.0, value=840.0, step=0.01
+            "Total Charges ($)",
+            min_value=0.0,
+            value=840.0,
+            step=0.01
         )
 
     submitted = st.form_submit_button(
-        "Predict Churn", type="primary", use_container_width=True
+        "Predict Churn",
+        type="primary",
+        use_container_width=True
     )
 
 if submitted:
@@ -177,7 +232,7 @@ if submitted:
         "PaperlessBilling": paperless_billing,
         "PaymentMethod": payment_method,
         "MonthlyCharges": monthly_charges,
-        "TotalCharges": total_charges,
+        "TotalCharges": total_charges
     }
 
     input_df = pd.DataFrame([input_data])
@@ -198,21 +253,47 @@ if submitted:
 
     if prediction == churn_class:
         st.error("⚠️ Customer is likely to CHURN")
-        st.metric("Churn Probability", f"{churn_probability:.1%}")
+
+        st.metric(
+            "Churn Probability",
+            f"{churn_probability:.1%}"
+        )
+
         st.warning(
-            "This customer shows characteristics associated with a higher "
-            "likelihood of leaving the service."
+            "This customer shows characteristics associated "
+            "with a higher likelihood of leaving the service."
         )
     else:
         st.success("✅ Customer is likely to STAY")
-        st.metric("Churn Probability", f"{churn_probability:.1%}")
-        st.info("This customer is currently predicted to remain with the service.")
+
+        st.metric(
+            "Churn Probability",
+            f"{churn_probability:.1%}"
+        )
+
+        st.info(
+            "This customer is currently predicted to remain "
+            "with the service."
+        )
 
     st.progress(float(churn_probability))
 
 with st.expander("About this model"):
     st.write(
-        "The model follows the workflow in the original project notebook: "
-        "categorical Label Encoding, an 80/20 train-test split, SMOTE on the "
-        "training data, and a Random Forest Classifier with random_state=42."
+        "The model uses categorical Label Encoding, an 80/20 "
+        "train-test split, SMOTE, and an optimized Random Forest "
+        "selected through GridSearchCV with 5-fold Stratified "
+        "Cross-Validation."
     )
+
+    st.write(
+        "Selected Random Forest parameters: "
+        "n_estimators=400, max_depth=8, min_samples_leaf=1."
+    )
+
+    st.write(
+        "F1 score is used as the primary model selection metric "
+        "because identifying customers likely to churn is the "
+        "main objective."
+    )
+
